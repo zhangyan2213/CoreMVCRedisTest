@@ -18,7 +18,6 @@ namespace WebTestDemo.Helper.Redis
         public RedisHelper(IOptions<RedisConfigDto> redisConfigOptions,IRedisConnect redisConnect)
         {
             _redisConnect = redisConnect;
-            _redis = _redisConnect.GetDatabase();
         }
 
         #region 获取redis信息
@@ -28,6 +27,7 @@ namespace WebTestDemo.Helper.Redis
         /// <returns></returns>
         public IDatabase GetDatabase(int defaultDB = -1)
         {
+            _redis = _redisConnect.GetDatabase(defaultDB);
             return _redis;
         }
         public IServer GetServer(string configName = null, int endPointsIndex = 0)

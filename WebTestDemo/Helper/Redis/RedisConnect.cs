@@ -17,7 +17,6 @@ namespace WebTestDemo.Helper.Redis
         private static ConnectionMultiplexer _sentinel;
         private static ConfigurationOptions _sentinelConfigurationOptions;
         private static ISubscriber _sentinelsub;
-        public static IDatabase _redis;
         public static RedisConfigDto _redisConfig { get; set; }
         public RedisConnect(IOptions<RedisConfigDto> redisConfigOptions)
         {
@@ -92,8 +91,7 @@ namespace WebTestDemo.Helper.Redis
             {
                 defaultDB = _defaultDB;
             }
-            _redis = GetConnect().GetDatabase(defaultDB);
-            return _redis;
+            return GetConnect().GetDatabase(defaultDB);
         }
         public IServer GetServer(string configName = null, int endPointsIndex = 0)
         {

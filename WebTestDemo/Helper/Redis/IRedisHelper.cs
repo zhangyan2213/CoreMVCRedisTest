@@ -8,7 +8,20 @@ namespace WebTestDemo.Helper.Redis
         IDatabase GetDatabase(int defaultDB = -1);
         IServer GetServer(string configName = null, int endPointsIndex = 0);
         ISubscriber GetSubscriber(string configName = null);
+        /// <summary>
+        /// 获取redis分布式锁
+        /// </summary>
+        /// <param name="key">要操作的Key</param>
+        /// <param name="value">Guid</param>
+        /// <param name="second">过期时间(秒)</param>
+        /// <returns></returns>
         Task<bool> LockTakeAsync(string key, string value, int second);
+        /// <summary>
+        /// 释放redis分布式锁
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         Task<bool> LockReleaseAsync(string key, string value);
         /// <summary>
         /// Redis分布式锁续期问题解决方案

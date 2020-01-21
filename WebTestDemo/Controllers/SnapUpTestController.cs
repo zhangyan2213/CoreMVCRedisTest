@@ -27,9 +27,9 @@ namespace WebTestDemo.Controllers
         //模拟抢购
         public void SnapUpTest()
         {
-            Parallel.For(0, 1000, thread =>
+            Parallel.For(0, 1000, thread => //模拟N个人，多线程异步
             {
-                for (int i = 0; i < 20; i++)
+                for (int i = 0; i < 20; i++) //模拟一个人点击N次，单线程同步
                 {
                     SnapUpCommodity();
                     Thread.Sleep(50);
@@ -40,24 +40,24 @@ namespace WebTestDemo.Controllers
 
         public async Task SnapUpCommodity()
         {
-            string guid = Guid.NewGuid().ToString();
-            var threadId = Thread.CurrentThread.ManagedThreadId.ToString();
-            var commoditySum = int.Parse(await _redis.StringGetAsync(commodityKey));
-            if (commoditySum <= 0) 
+            string guid = Guid.NewGuid().ToString();//设置唯一key，互斥锁，只能解锁自己上的锁
+            var threadId = Thread.CurrentThread.ManagedThreadId.ToString(); //线程id 模拟UserID
+            var commoditySum = int.Parse(await _redis.StringGetAsync(commodityKey)); //模拟库存库存
+            if (commoditySum <= 0) //如果库存不足，则直接返回
             {
                 return;
             }
-            var rushBuySuccess = _redis.HashExists(RushBuySuccessUser,threadId);
+            var rushBuySuccess = _redis.HashExists(RushBuySuccessUser,threadId);//根据业务，防止超抢情况，如果抢购成功则直接返回
             if (rushBuySuccess == true)
             {
                 return;
             }
-            var lockResult = await _redisClient.LockTakeAsync(lockKey, guid, lockKeyOutTime);
-            if (lockResult)
+            var lockResult = await _redisClient.LockTakeAsync(lockKey, guid, lockKeyOutTime);//获取锁，设置定期时间，一般为30秒，防止执行过程中服务器宕机导致死锁
+            if (lockResult) //如果获取成功则执行业务
             {
                 try
                 {
-                    await SanpUpCommodity();
+                    await SanpUpCommodity();//模拟抢购成功，减库存
                 }
                 catch (Exception ex)
                 {
@@ -65,8 +65,8 @@ namespace WebTestDemo.Controllers
                 }
                 finally
                 {
-                    _redis.HashIncrement(RushBuySuccessUser, threadId);
-                    await _redisClient.LockReleaseAsync(lockKey, guid);
+                    _redis.HashIncrement(RushBuySuccessUser, threadId);//如果抢购成功则存入hashkey，避免超抢
+                    await _redisClient.LockReleaseAsync(lockKey, guid);//抢购成功则释放锁
                     Console.WriteLine($"用户：{threadId}已抢到商品，时间为:{DateTime.Now}");
                 }   
             }

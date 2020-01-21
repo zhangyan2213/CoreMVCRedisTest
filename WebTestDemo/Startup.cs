@@ -27,7 +27,7 @@ namespace WebTestDemo
             #region Redis
             services.AddSingleton<IRedisConnect, RedisConnect>();
             services.AddSingleton<IRedisHelper, RedisHelper>();
-            services.Configure<RedisConfigDto>(Configuration.GetSection("Redis"));
+            services.Configure<RedisConfigDto>(Configuration.GetSection("Redis"));//从Appsetting中获取设置的值映射到对象中，可以使用IOptions<T>注入到项目中
 
             //var section = Configuration.GetSection("Redis:RedisDefault");
             //var redisConnection = section.GetSection("Connection")?.Value;
