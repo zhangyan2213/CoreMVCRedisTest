@@ -79,24 +79,30 @@ namespace WebTestDemo.Helper.Redis
             };
             _timer.Start();
         }
-        private static void LockRenew(string key, string value, int second)
+        private void LockRenew(string key, string value, int second)
         {
-            if (System.Threading.Interlocked.Exchange(ref _inTimer,1) == 0)
+            //如果是当前key对应的value，则进行守护，否则释放
+            var current = _redis.StringGet(key, CommandFlags.PreferSlave);
+            if (current == value)
             {
+                Console.WriteLine($"--设置前剩余过期时间为{_redis.KeyTimeToLive(key)}");
                 _redis.KeyExpire(key, DateTime.Now.AddSeconds(second));
-                //var redisValue = _redis.StringGet(key);
-                //if (redisValue == value)
+                //重入机制，锁定一个值，如果前面的值未释放，则不执行
+                //if (System.Threading.Interlocked.Exchange(ref _inTimer, 1) == 0)
                 //{
-                //    Console.WriteLine($"--设置前剩余过期时间为{_redis.KeyTimeToLive(key)}");
-                //    _redis.KeyExpire(key, DateTime.Now.AddSeconds(second));
-                //    Console.WriteLine($"***设置后剩余过期时间为{_redis.KeyTimeToLive(key)}");
+                //    重入机制，执行结束释放此值
+                //    System.Threading.Interlocked.Exchange(ref _inTimer, 0);
                 //}
+            }
+            else
+            {
+                LockWatchDogStop();
+                Console.WriteLine($"--设置过期时间失败，当前value:{current},redisvalue:{value}");
             }
         }
         public void LockWatchDogStop()
         {
             //Console.WriteLine($"Stop——{System.Threading.Thread.CurrentThread.ManagedThreadId}关闭开门狗，时间为:{DateTime.Now}");
-            System.Threading.Interlocked.Exchange(ref _inTimer, 0);
             _timer.Stop();
         }
         #endregion
